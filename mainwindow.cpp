@@ -98,13 +98,23 @@ void MainWindow::onCheckboxToggled(bool checked, HWND hwnd)
 {
     if (checked)
     {
-        _targetWindowHandleList.append(hwnd);
+        TargetWindowInfo newWindowInfo;
+        newWindowInfo.hwnd = hwnd;  // 设置窗口句柄
+        newWindowInfo.visible = true;
+        _targetWindowHandleList.append(newWindowInfo);
     }
     else
     {
-        _targetWindowHandleList.removeOne(hwnd);
+        for (int i = 0; i < _targetWindowHandleList.size(); i++)
+        {
+            if (_targetWindowHandleList[i].hwnd == hwnd)
+            {
+                _targetWindowHandleList.removeAt(i);
+                break;
+            }
+        }
     }
-    ui->statusbar->showMessage(QString("当前目标窗口数：%1").arg(_targetWindowHandleList.length()));
+    ui->statusbar->showMessage(QString("当前目标窗口数：%1").arg(_targetWindowHandleList.size()));
 }
 
 void MainWindow::on_pushButtonRefreshTableWidgetWindowInfo_clicked()
@@ -114,9 +124,9 @@ void MainWindow::on_pushButtonRefreshTableWidgetWindowInfo_clicked()
 
 void MainWindow::on_pushButtonShowCheckedWindow_clicked()
 {
-    for (auto hwnd : _targetWindowHandleList)
+    for (auto windowInfo : _targetWindowHandleList)
     {
-        ShowWindow(hwnd, SW_SHOWNORMAL);
+        ShowTargetWindow(windowInfo.hwnd, g_mainWindowInstance->ui->checkBoxHideByTransparency->isChecked());
     }
 }
 
@@ -150,23 +160,24 @@ void MainWindow::on_pushButtonStop_clicked()
 
 LRESULT CALLBACK MainWindow::HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
 {
-    if (nCode == HC_ACTION && wParam == WM_MOUSEMOVE && g_mainWindowInstance->_targetWindowHandleList.length() != 0)
+    if (nCode == HC_ACTION && wParam == WM_MOUSEMOVE && g_mainWindowInstance->_targetWindowHandleList.size() != 0)
     {
         MSLLHOOKSTRUCT *hookStruct = (MSLLHOOKSTRUCT *)lParam;
-        for (auto hwnd : g_mainWindowInstance->_targetWindowHandleList)
+        for (int i = 0; i < g_mainWindowInstance->_targetWindowHandleList.size(); i++)
         {
             RECT rect;
-            GetWindowRect(hwnd, &rect);
+            GetWindowRect(g_mainWindowInstance->_targetWindowHandleList[i].hwnd, &rect);
             bool isInWindow = hookStruct->pt.x >= rect.left && hookStruct->pt.x <= rect.right && hookStruct->pt.y >= rect.top && hookStruct->pt.y <= rect.bottom;
-            bool isVisible = IsWindowVisible(hwnd);
 
-            if(isInWindow && !isVisible) // 光标在窗口但窗口没显示，显示窗口
+            if(isInWindow && !g_mainWindowInstance->_targetWindowHandleList[i].visible) // 光标在窗口但窗口没显示，显示窗口
             {
-                ShowWindow(hwnd, SW_SHOWNORMAL);
+                ShowTargetWindow(g_mainWindowInstance->_targetWindowHandleList[i].hwnd, g_mainWindowInstance->ui->checkBoxHideByTransparency->isChecked());
+                g_mainWindowInstance->_targetWindowHandleList[i].visible = true;
             }
-            else if (!isInWindow && isVisible)// 光标不在窗口但窗口显示，隐藏窗口
+            else if (!isInWindow && g_mainWindowInstance->_targetWindowHandleList[i].visible)// 光标不在窗口但窗口显示，隐藏窗口
             {
-                ShowWindow(hwnd, SW_HIDE);
+                HideTargetWindow(g_mainWindowInstance->_targetWindowHandleList[i].hwnd, g_mainWindowInstance->ui->checkBoxHideByTransparency->isChecked());
+                g_mainWindowInstance->_targetWindowHandleList[i].visible = false;
             }
         }
     }
@@ -193,5 +204,33 @@ void MainWindow::on_actionOpenAboutDialog_triggered()
 {
     AboutDialog *w = new AboutDialog();
     w->show();
+}
+
+void MainWindow::HideTargetWindow(HWND hwnd, bool byTransparency)
+{
+    if (byTransparency)
+    {
+       LONG currentStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+       SetWindowLong(hwnd, GWL_EXSTYLE, currentStyle | WS_EX_TOOLWINDOW | WS_EX_LAYERED);
+       SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
+    }
+    else
+    {
+        ShowWindow(hwnd, SW_HIDE);
+    }
+}
+
+void MainWindow::ShowTargetWindow(HWND hwnd, bool byTransparency)
+{
+    if (byTransparency)
+    {
+       SetLayeredWindowAttributes(hwnd, 0, 255, 0);
+       LONG  currentStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+       SetWindowLong(hwnd, GWL_EXSTYLE, currentStyle & ~WS_EX_TOOLWINDOW);
+    }
+    else
+    {
+        ShowWindow(hwnd, SW_SHOWNORMAL);
+    }
 }
 

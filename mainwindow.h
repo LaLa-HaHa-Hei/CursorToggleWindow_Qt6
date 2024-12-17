@@ -38,8 +38,15 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    // 目标窗口信息
+    struct TargetWindowInfo
+    {
+        HWND hwnd;
+        bool visible;
+    };
+
     // 要隐藏显示的窗口句柄列表
-    QList<HWND> _targetWindowHandleList;
+    QList<TargetWindowInfo> _targetWindowHandleList;
     // 鼠标钩子id
     HHOOK _hookId = nullptr;
     // 刷新窗口信息表格
@@ -48,5 +55,9 @@ private:
     static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
     // 鼠标钩子回调函数
     static LRESULT CALLBACK HookCallback(int code, WPARAM wParam, LPARAM lParam);
+    // 隐藏目标窗口
+    static void HideTargetWindow(HWND hwnd, bool byTransparency);
+    // 显示目标窗口
+    static void ShowTargetWindow(HWND hwnd, bool byTransparency);
 };
 #endif // MAINWINDOW_H

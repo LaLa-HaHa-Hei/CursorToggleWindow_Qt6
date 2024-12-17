@@ -72,6 +72,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="checkBoxHideByTransparency">
+        <property name="text">
+         <string>通过透明度隐藏</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
