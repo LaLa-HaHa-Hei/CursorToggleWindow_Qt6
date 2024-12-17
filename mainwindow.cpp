@@ -106,11 +106,11 @@ void MainWindow::onCheckboxToggled(bool checked, HWND hwnd)
     }
     ui->statusbar->showMessage(QString("当前目标窗口数：%1").arg(_targetWindowHandleList.length()));
 }
+
 void MainWindow::on_pushButtonRefreshTableWidgetWindowInfo_clicked()
 {
     RefreshTableWidgetWindowInfo();
 }
-
 
 void MainWindow::on_pushButtonShowCheckedWindow_clicked()
 {
@@ -148,7 +148,7 @@ void MainWindow::on_pushButtonStop_clicked()
     }
 }
 
-LRESULT MainWindow::HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK MainWindow::HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
 {
     if (nCode == HC_ACTION && wParam == WM_MOUSEMOVE && g_mainWindowInstance->_targetWindowHandleList.length() != 0)
     {

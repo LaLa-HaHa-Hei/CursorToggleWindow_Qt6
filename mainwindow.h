@@ -19,28 +19,34 @@ public:
     ~MainWindow();
 
 private slots:
+    // 刷新窗口信息表格
     void on_pushButtonRefreshTableWidgetWindowInfo_clicked();
+    // 表格中选项框点击
     void onCheckboxToggled(bool checked, HWND hwnd);
-
+    // 显示所有选中的窗口
     void on_pushButtonShowCheckedWindow_clicked();
-
+    // 开始监听鼠标事件
     void on_pushButtonStart_clicked();
-
+    // 停止监听鼠标事件
     void on_pushButtonStop_clicked();
-
+    // 打开工作目录
     void on_actionOpenWorkingDir_triggered();
-
+    // 打开程序exe目录
     void on_actionOpenAppDir_triggered();
-
+    // 打开关于窗口
     void on_actionOpenAboutDialog_triggered();
 
 private:
     Ui::MainWindow *ui;
+    // 要隐藏显示的窗口句柄列表
     QList<HWND> _targetWindowHandleList;
+    // 鼠标钩子id
     HHOOK _hookId = nullptr;
-
+    // 刷新窗口信息表格
     void RefreshTableWidgetWindowInfo();
+    // 遍历所有窗口，显示到表格中
     static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
-    static LRESULT HookCallback(int code, WPARAM wParam, LPARAM lParam);
+    // 鼠标钩子回调函数
+    static LRESULT CALLBACK HookCallback(int code, WPARAM wParam, LPARAM lParam);
 };
 #endif // MAINWINDOW_H
